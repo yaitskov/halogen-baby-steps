@@ -59,7 +59,7 @@ component =
             , P.id_ newInputId
             , P.type_ P.InputText
             , P.autofocus true
-            , E.onKeyDown mapEnterToAdd
+            , E.onKeyUp mapEnterToAdd
             , E.onValueChange \s -> Just $ NewName s
             ]
           , HH.button [E.onClick \_ -> Just Append] [ HH.text "add" ]
