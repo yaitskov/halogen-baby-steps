@@ -2,7 +2,7 @@ module Main where
 
 
 import Prelude (Unit, bind, discard, map, unit, ($), (<>), (>>=))
-
+import Debug.Trace -- (DebugWarning, spy)
 import Data.Array (snoc)
 import Effect (Effect)
 import Effect.Console (log)
@@ -20,6 +20,7 @@ import Web.HTML.HTMLElement (focus, fromElement)
 import Web.HTML.HTMLDocument (toNonElementParentNode, setTitle)
 import Web.HTML.Window (document)
 import Web.HTML (window)
+import Web.UIEvent.KeyboardEvent (key)
 
 main :: Effect Unit
 main = HA.runHalogenAff do
@@ -32,15 +33,8 @@ type AppState = { names :: Array String
 
 
 data Action = Append | NewName String
--- Web.HTML  window :: Effect Window
--- document :: Window -> Effect HTMLDocument
--- fromDocument :: Document -> Maybe HTMLDocument
--- foreign import setTitle :: String -> HTMLDocument -> Effect Unit
--- toNonElementParentNode :: HTMLDocument -> NonElementParentNode
--- getElementById :: String -> NonElementParentNode -> Effect (Maybe Element)
--- Web.HTML.HTMLElement.purs:fromElement :: Element -> Maybe HTMLElement
--- foreign import focus :: HTMLElement -> Effect Unit
-component :: forall query input output. H.Component HH.HTML query input output Aff
+
+component :: forall query input output. DebugWarning => H.Component HH.HTML query input output Aff
 component =
   H.mkComponent
   { initialState
@@ -52,6 +46,11 @@ component =
     initialState _ = { names: ["Daniel", "Agata"]
                      , newName: ""
                      }
+    mapEnterToAdd ke =
+      case key ke of
+        "Enter" -> Just Append
+        badKey -> spy ("Ignore key [" <> badKey <> "]") Nothing
+
     render state =
       HH.div_
         [ HH.div_
@@ -60,6 +59,7 @@ component =
             , P.id_ newInputId
             , P.type_ P.InputText
             , P.autofocus true
+            , E.onKeyDown mapEnterToAdd
             , E.onValueChange \s -> Just $ NewName s
             ]
           , HH.button [E.onClick \_ -> Just Append] [ HH.text "add" ]
