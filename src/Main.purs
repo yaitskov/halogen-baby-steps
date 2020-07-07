@@ -2,7 +2,6 @@ module Main where
 
 
 import Prelude (Unit, bind, discard, map, unit, ($), (<>), (>>=))
-import Debug.Trace -- (DebugWarning, spy)
 import Data.Array (snoc)
 import Effect (Effect)
 import Effect.Console (log)
@@ -34,7 +33,7 @@ type AppState = { names :: Array String
 
 data Action = Append | NewName String
 
-component :: forall query input output. DebugWarning => H.Component HH.HTML query input output Aff
+component :: forall query input output. H.Component HH.HTML query input output Aff
 component =
   H.mkComponent
   { initialState
@@ -49,7 +48,7 @@ component =
     mapEnterToAdd ke =
       case key ke of
         "Enter" -> Just Append
-        badKey -> spy ("Ignore key [" <> badKey <> "]") Nothing
+        _ -> Nothing
 
     render state =
       HH.div_
