@@ -1,12 +1,12 @@
 module Main where
 
 
-import Prelude (Unit, bind, discard, map, unit, ($), (<>), (>>=))
-import Data.Array (snoc)
+import Prelude (Unit, bind, discard, unit, show, ($), (<>), (>>=), identity)
+import Data.Array (snoc, deleteAt, mapWithIndex, (!!))
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Aff (Aff)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Halogen (liftEffect)
 import Halogen as H
 import Halogen.Aff as HA
@@ -31,7 +31,7 @@ type AppState = { names :: Array String
                 }
 
 
-data Action = Append | NewName String
+data Action = Append | NewName String | Remove Int
 
 component :: forall query input output. H.Component HH.HTML query input output Aff
 component =
@@ -50,6 +50,12 @@ component =
         "Enter" -> Just Append
         _ -> Nothing
 
+
+    listItem i n =
+      HH.div_
+        [ HH.button [E.onClick \_ -> Just $ Remove i] [ HH.text "x" ]
+        , HH.text n
+        ]
     render state =
       HH.div_
         [ HH.div_
@@ -63,7 +69,7 @@ component =
             ]
           , HH.button [E.onClick \_ -> Just Append] [ HH.text "add" ]
           ]
-        , HH.div_ (map (\n -> HH.div_ [HH.text n]) state.names)
+        , HH.div_ $ mapWithIndex listItem state.names
         ]
 
     focusOnInput = do
@@ -84,6 +90,10 @@ component =
             _  -> do
               liftEffect focusOnInput
               H.put st { newName = "", names = snoc st.names st.newName }
+        Remove i -> do
+          liftEffect $ log ("Remove Item [" <> show (st.names !! i)
+                            <> "] at index " <> show i)
+          H.put st { names = maybe [] identity $ deleteAt i st.names }
         NewName s -> do
           liftEffect $ log ("Update new name: [" <> s <> "]")
           H.put st { newName = s }
